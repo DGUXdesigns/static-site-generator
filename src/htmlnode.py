@@ -12,7 +12,7 @@ class HTMLNode:
         self.props = props
 
     def to_html(self):
-        raise NotImplementedError("Error: Not Implemented")
+        raise NotImplementedError("Error: to_html Not Implemented")
 
     def props_to_html(self):
         result = ""
