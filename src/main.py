@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 
 from html_markdown import markdown_to_html_node
@@ -6,7 +7,7 @@ from html_markdown import markdown_to_html_node
 
 def main():
     copy_dir("static", "public")
-    generate_page("content/index.md", "template.html", "public/index.html")
+    generate_pages_recursive("content", "template.html", "public")
 
 
 def copy_dir(src: str, dest: str) -> None:
@@ -55,16 +56,35 @@ def generate_page(from_path, template_path, dest_path):
         from_content = f.read()
 
     with open(template_path, "r") as f:
-        template_content = f.read()
+        template = f.read()
 
-    html_string = markdown_to_html_node(from_content).to_html()
+    html = markdown_to_html_node(from_content).to_html()
     title = extract_title(from_content)
 
-    updated_template = template_content.replace("{{ Title }}", title)
-    final_template = updated_template.replace("{{ Content }}", html_string)
+    template = template.replace("{{ Title }}", title)
+    template = template.replace("{{ Content }}", html)
 
     with open(dest_path, "w", encoding="UTF-8") as f:
-        f.write(final_template)
+        f.write(template)
+
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    # Make sure the destination directory exists
+    pathlib.Path(dest_dir_path).mkdir(parents=True, exist_ok=True)
+
+    for item in os.listdir(dir_path_content):
+        src_path = os.path.join(dir_path_content, item)
+        dest_path = os.path.join(dest_dir_path, item)
+
+        if os.path.isfile(src_path) and src_path.endswith(".md"):
+            # Convert Markdown to HTML
+            dest_path = os.path.splitext(dest_path)[0] + ".html"
+            print(f"Generating page from {src_path} -> {dest_path}")
+            generate_page(src_path, template_path, dest_path)
+
+        elif os.path.isdir(src_path):
+            # Recurse into subdirectory
+            generate_pages_recursive(src_path, template_path, dest_path)
 
 
 main()
