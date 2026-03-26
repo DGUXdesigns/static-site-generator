@@ -7,7 +7,10 @@ from html_markdown import markdown_to_html_node
 
 
 def main():
-    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+    basepath = "/"
+
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
 
     copy_dir("static", "docs")
     generate_pages_recursive("content", "template.html", "docs", basepath)
