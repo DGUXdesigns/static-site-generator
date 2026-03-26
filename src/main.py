@@ -1,13 +1,16 @@
 import os
 import pathlib
 import shutil
+import sys
 
 from html_markdown import markdown_to_html_node
 
 
 def main():
-    copy_dir("static", "public")
-    generate_pages_recursive("content", "template.html", "public")
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+
+    copy_dir("static", "docs")
+    generate_pages_recursive("content", "template.html", "docs", basepath)
 
 
 def copy_dir(src: str, dest: str) -> None:
@@ -49,7 +52,7 @@ def extract_title(markdown):
     raise Exception("No H1 header found")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     with open(from_path, "r") as f:
@@ -63,12 +66,14 @@ def generate_page(from_path, template_path, dest_path):
 
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
+    template = template.replace('href="/', f'href="{basepath}')
+    template = template.replace('src="/', f'src="{basepath}')
 
     with open(dest_path, "w", encoding="UTF-8") as f:
         f.write(template)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     # Make sure the destination directory exists
     pathlib.Path(dest_dir_path).mkdir(parents=True, exist_ok=True)
 
@@ -80,11 +85,11 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
             # Convert Markdown to HTML
             dest_path = os.path.splitext(dest_path)[0] + ".html"
             print(f"Generating page from {src_path} -> {dest_path}")
-            generate_page(src_path, template_path, dest_path)
+            generate_page(src_path, template_path, dest_path, basepath)
 
         elif os.path.isdir(src_path):
             # Recurse into subdirectory
-            generate_pages_recursive(src_path, template_path, dest_path)
+            generate_pages_recursive(src_path, template_path, dest_path, basepath)
 
 
 main()
